@@ -1,5 +1,5 @@
-
 import solango
+import solango.signals
 from solango.solr import get_model_key, get_model_from_key
 
 class BaseIndexer(object):
@@ -159,4 +159,27 @@ def _create_indexer():
     cls = getattr(module, typ[1])
     return cls()
 
-indexer = _create_indexer()
+
+def _index_queued(*args, **kwargs):
+    """
+    Signal listener
+    """
+    try:
+        get_default_indexer().index_queued()
+    except NotImplementedError:
+        pass
+
+
+def get_default_indexer():
+    """
+    Return an instance of the configured indexer class. If this is the first 
+    call to this function, a new instance will be initialized.
+
+    @return: indexer
+    """
+    indexer = getattr(BaseIndexer, '__default_instance', None)
+    if indexer is None:
+        BaseIndexer.__default_instance = indexer = _create_indexer()
+        solango.signals.index_queued.connect(_index_queued)
+    return indexer
+

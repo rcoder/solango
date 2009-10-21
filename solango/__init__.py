@@ -3,7 +3,7 @@
 #
 # django_settings so when we do  solango import settings we don't get confused
 from django.conf import settings as django_settings
-from django.db.models import signals
+from django.db.models import signals as db_signal
 from django.db.models.base import ModelBase
 
 registry = {}
@@ -13,7 +13,7 @@ from solango.solr import fields
 from solango.solr import get_model_key
 from solango.solr.connection import SearchWrapper
 from solango.solr.documents import SearchDocument
-from solango.indexing import indexer
+from solango.indexing import get_default_indexer
 
 class AlreadyRegistered(Exception):
     pass
@@ -38,8 +38,9 @@ def register(model_or_iterable, search_document=None, connect_signals=True):
         registry[key] = search_document
         if connect_signals:
             #Hook Up The Signals
-            signals.post_save.connect(indexer.post_save, model)
-            signals.post_delete.connect(indexer.post_delete, model)
+            indexer = get_default_indexer()
+            db_signals.post_save.connect(indexer.post_save, model)
+            db_signals.post_delete.connect(indexer.post_delete, model)
 
 for a in django_settings.INSTALLED_APPS:
     try:

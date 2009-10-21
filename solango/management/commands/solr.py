@@ -138,5 +138,5 @@ Successfully created schema.xml in/at: %s
             print "Solr process has been interrupted"
             
         if index_queued:
-            from solango.indexing import indexer
-            indexer.index_queued()
+            from solango.signals import index_queued
+            index_queued.send(sender=None)
